@@ -1,0 +1,9 @@
+{
+  "name": "sae-root-scripts",
+  "version": "1.0.0",
+  "description": "Scripts globaux pour le projet",
+  "scripts": {
+    "scan:win": "docker run --rm --network=sae_iotnet -v \"%cd%:/usr/src\" -e SONAR_HOST_URL=\"http://sonarqube:9000\" -e SONAR_TOKEN=\"squ_f3cad257c935c3f016c77ee7eb325d135af5cbeb\" sonarsource/sonar-scanner-cli -Dsonar.projectKey=sae-iot-g1 -Dsonar.sources=backend,frontend -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**",
+    "scan:linux": "docker run --rm --network=sae_iotnet -v \"$(pwd):/usr/src\" -e SONAR_HOST_URL=\"http://sonarqube:9000\" -e SONAR_TOKEN=\"squ_f3cad257c935c3f016c77ee7eb325d135af5cbeb\" sonarsource/sonar-scanner-cli -Dsonar.projectKey=sae-iot-g1 -Dsonar.sources=backend,frontend -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**"
+  }
+}

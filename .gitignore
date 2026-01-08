@@ -1,0 +1,59 @@
+# === Node-RED data ===
+nodered-data/node_modules/
+nodered-data/.npm/
+nodered-data/_logs/
+nodered-data/lib/flows/*
+!nodered-data/lib/flows/*.json   
+
+# === Logs ===
+mosquitto-logs/
+*.log
+*.tmp
+
+# === Docker ===
+docker-compose.override.yml
+*.pid
+
+# === Mosquitto ===
+# Garde la config, ignore les fichiers générés
+mosquitto-config/*.bak
+
+# === MySQL ===
+mysql-init/*.log
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+
+# === Editors ===
+.vscode/
+.idea/
+
+# === caches ===
+**/tmp/
+**/.cache/
+=======
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build
+/dist
+/build
+
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# MacOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+

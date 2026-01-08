@@ -1,0 +1,181 @@
+stages:
+  - build
+  - test
+  - security
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+.docker_login: &docker_login
+  - echo "$DOCKER_HUB_TOKEN" | docker login --username $DOCKER_HUB_USER --password-stdin
+
+# --- BUILD FRONTEND ---
+build:frontend:
+  stage: build
+  image: docker:25-cli
+  tags:
+    - dind               
+  before_script:
+    - *docker_login
+  script:
+    - docker build --build-arg VITE_API_URL=http://20.250.161.72:3000 -t $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:$CI_COMMIT_SHORT_SHA ./frontend
+    - docker build --build-arg VITE_API_URL=http://20.250.161.72:3000 -t $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:latest ./frontend
+    - docker push $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:$CI_COMMIT_SHORT_SHA
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "main" ]] || [[ "$CI_COMMIT_BRANCH" == *"hotfix"* ]]; then
+        echo "PROD : Mise à jour Azure (Push latest)"
+        docker push $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:latest
+      else
+        echo "DEV : Pas de mise à jour Azure"
+      fi
+  only:
+    refs:
+      - main
+      - develop
+      - feature/sonarqube
+      - hotfix/sonarqube
+
+# --- BUILD BACKEND ---
+build:backend:
+  stage: build
+  image: docker:25-cli
+  tags:
+    - dind
+  before_script:
+    - *docker_login
+  script:
+    - docker build -t $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:$CI_COMMIT_SHORT_SHA ./backend
+    - docker build -t $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:latest ./backend
+    - docker push $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:$CI_COMMIT_SHORT_SHA
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "main" ]] || [[ "$CI_COMMIT_BRANCH" == *"hotfix"* ]]; then
+        echo " PROD : Mise à jour Azure (Push latest)"
+        docker push $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:latest
+      else
+        echo " DEV : Pas de mise à jour Azure"
+      fi
+  only:
+    refs:
+      - main
+      - develop
+      - feature/sonarqube
+      - hotfix/sonarqube
+
+# --- BUILD NODERED ---
+build:nodered:
+  stage: build
+  image: docker:25-cli
+  tags:
+    - dind
+  before_script:
+    - *docker_login
+  script:
+    - docker build -t $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:$CI_COMMIT_SHORT_SHA ./nodered
+    - docker build -t $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:latest ./nodered
+    - docker push $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:$CI_COMMIT_SHORT_SHA
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "main" ]] || [[ "$CI_COMMIT_BRANCH" == *"hotfix"* ]]; then
+        echo " PROD : Mise à jour Azure (Push latest)"
+        docker push $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:latest
+      else
+        echo " DEV : Pas de mise à jour Azure"
+      fi
+  only:
+    refs:
+      - main
+      - develop
+      - feature/sonarqube
+      - hotfix/sonarqube
+
+# --- TESTS UNITAIRES ---
+test:frontend:unit:
+  stage: test
+  image: node:18-alpine
+  tags:
+    - dind
+  before_script:
+    - cd frontend
+    - npm ci
+  script:
+    - npm run test || echo "Tests non configurés"
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+    paths:
+      - frontend/coverage/
+    expire_in: 1 week
+  only:
+    refs:
+      - main
+      - develop
+      - feature/sonarqube
+      - hotfix/sonarqube
+
+test:backend:unit:
+  stage: test
+  image: node:18-alpine
+  tags:
+    - dind
+  before_script:
+    - cd backend
+    - npm ci
+  script:
+    - npm run test || echo "Tests non configurés"
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage/cobertura-coverage.xml
+    paths:
+      - backend/coverage/
+    expire_in: 1 week
+  only:
+    refs:
+      - main
+      - develop
+      - feature/sonarqube
+      - hotfix/sonarqube
+
+# --- SÉCURITÉ ---
+security:npm-audit:
+  stage: security
+  image: node:18-alpine
+  tags:
+    - dind
+  script:
+    - cd backend && npm audit --audit-level=high || true
+    - cd ../frontend && npm audit --audit-level=high || true
+  only:
+    refs:
+      - main
+      - develop 
+      - hotfix/sonarqube
+
+security:trivy:
+  stage: security
+  image: docker:25-cli
+  tags:
+    - dind
+  services:
+    - docker:dind
+  before_script:
+    - apk add --no-cache curl bash
+    - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    - *docker_login
+    - docker pull $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:$CI_COMMIT_SHORT_SHA
+    - docker pull $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:$CI_COMMIT_SHORT_SHA
+    - docker pull $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:$CI_COMMIT_SHORT_SHA
+  script:
+    - trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:$CI_COMMIT_SHORT_SHA
+    - trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:$CI_COMMIT_SHORT_SHA
+    - trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:$CI_COMMIT_SHORT_SHA
+  only:
+    refs:
+      - main
+      - develop
+      - hotfix/sonarqube

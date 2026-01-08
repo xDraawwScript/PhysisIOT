@@ -1,0 +1,834 @@
+[
+    {
+        "id": "7e2d5442bc7c12cf",
+        "type": "tab",
+        "label": "Flux 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "7487a5825d1ed769",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "test.mosquitto.org",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "112cb0a33b2d6116",
+        "type": "MySQLdatabase",
+        "name": "",
+        "host": "mysql",
+        "port": "3306",
+        "db": "nodered",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
+        "id": "mqtt_broker",
+        "type": "mqtt-broker",
+        "name": "test.mosquitto.org",
+        "broker": "test.mosquitto.org",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60"
+    },
+    {
+        "id": "ada1ead774712899",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-node-mysql": "2.0.0"
+        }
+    },
+    {
+        "id": "aae76bd67eb732e9",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "mosquitto",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "mosquitto_broker",
+        "type": "mqtt-broker",
+        "name": "Mosquitto Broker",
+        "broker": "mosquitto",
+        "port": "1883"
+    },
+    {
+        "id": "mysql_config",
+        "type": "MySQLdatabase",
+        "name": "MySQL nodered",
+        "host": "mysql",
+        "port": "3306",
+        "db": "nodered",
+        "tz": ""
+    },
+    {
+        "id": "d901cbdc34dd886c",
+        "type": "function",
+        "z": "7e2d5442bc7c12cf",
+        "name": "insert sql + traitement",
+        "func": "if (!msg.payload) return null;\n\nmsg.payload.temperature = Number(msg.payload.temperature);\nmsg.payload.humidite = Number(msg.payload.humidite);\nmsg.payload.gaz = Number(msg.payload.gaz);\n//msg.payload.latitude = Number(msg.payload.latitude);\n//msg.payload.longitude = Number(msg.payload.longitude);\n\nvar now = new Date();\nvar day = String(now.getDate()).padStart(2, '0');\nvar month = String(now.getMonth() + 1).padStart(2, '0');\nvar year = now.getFullYear();\nvar hour = String(now.getHours()).padStart(2, '0');\nvar minute = String(now.getMinutes()).padStart(2, '0');\nvar second = String(now.getSeconds()).padStart(2, '0');\n\nvar date = day + \"/\" + month + \"/\" + year;\nvar heure = hour + \":\" + minute + \":\" + second;\n\nlet deviceId = msg.payload.nom_capteur || msg.payload.deviceId || \"Capteur1\";\n\n// msg1 -> SQL insert\nlet msg1 = {};\nmsg1.topic = \"INSERT INTO mqtt_messages (deviceId, temperature, humidite, gaz, date, heure, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?)\";\nmsg1.payload = [\n    deviceId,\n    msg.payload.temperature,\n    msg.payload.humidite,\n    msg.payload.gaz,\n    date,\n    heure,\n    msg.payload.latitude,\n    msg.payload.longitude\n];\n\n// msg2 -> pipeline traitement\nlet msg2 = {};\nmsg2.payload = {\n    deviceId: deviceId,\n    temperature: msg.payload.temperature,\n    humidite: msg.payload.humidite,\n    gaz: msg.payload.gaz,\n    date: date,\n    heure: heure,\n    latitude: msg.payload.latitude,\n    longitude: msg.payload.longitude,\n    raw: msg.payload\n};\n\nreturn [msg1, msg2];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 560,
+        "wires": [
+            [
+                "f6913be09d186b79"
+            ],
+            [
+                "a8979f8a772cd2cb",
+                "3f48e11f9ba3fb77",
+                "8017e38f85b783c6"
+            ]
+        ]
+    },
+    {
+        "id": "e920040df41d353a",
+        "type": "mqtt in",
+        "z": "7e2d5442bc7c12cf",
+        "name": "",
+        "topic": "iot/mesures",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "aae76bd67eb732e9",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 250,
+        "y": 580,
+        "wires": [
+            [
+                "a74617f7d9560fa1"
+            ]
+        ]
+    },
+    {
+        "id": "f6913be09d186b79",
+        "type": "mysql",
+        "z": "7e2d5442bc7c12cf",
+        "mydb": "112cb0a33b2d6116",
+        "name": "",
+        "x": 1040,
+        "y": 1020,
+        "wires": [
+            [
+                "18dc8a8a108ef119"
+            ]
+        ]
+    },
+    {
+        "id": "18dc8a8a108ef119",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1420,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "e94f49c7b569553b",
+        "type": "inject",
+        "z": "7e2d5442bc7c12cf",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"temperature\":22.7,\"humidite\":54,\"fumee\":0}",
+        "payloadType": "json",
+        "x": 170,
+        "y": 80,
+        "wires": [
+            [
+                "f24a948f13074fef"
+            ]
+        ]
+    },
+    {
+        "id": "f24a948f13074fef",
+        "type": "function",
+        "z": "7e2d5442bc7c12cf",
+        "name": "function 4",
+        "func": "msg.payload = {\n    \"temperature\": Math.floor(Math.random() * 10 + 20),\n    \"humidite\": Math.floor(Math.random() * 20 + 40),    \n    \"fumee\": Math.round(Math.random()),\n   \"date\": new Date().toISOString(),\n   \"longitude\" : 40,\n   \"latitude\" : 5\n   };\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 80,
+        "wires": [
+            [
+                "bca65b4549ec39cf"
+            ]
+        ]
+    },
+    {
+        "id": "bca65b4549ec39cf",
+        "type": "mqtt out",
+        "z": "7e2d5442bc7c12cf",
+        "name": "capteur2/data",
+        "topic": "iot/mesures",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "aae76bd67eb732e9",
+        "x": 520,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "a8979f8a772cd2cb",
+        "type": "switch",
+        "z": "7e2d5442bc7c12cf",
+        "name": "Switch Gaz",
+        "property": "payload.gaz",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "gte",
+                "v": "200",
+                "vt": "str"
+            },
+            {
+                "t": "btwn",
+                "v": "101",
+                "vt": "num",
+                "v2": "199",
+                "v2t": "num"
+            },
+            {
+                "t": "lte",
+                "v": "100",
+                "vt": "num"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 3,
+        "x": 990,
+        "y": 340,
+        "wires": [
+            [
+                "79744cb972711552",
+                "mqtt_out_alert"
+            ],
+            [
+                "55c995934ced6260"
+            ],
+            [
+                "1c0de777cea57278"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt_out_alert",
+        "type": "mqtt out",
+        "z": "7e2d5442bc7c12cf",
+        "name": "MQTT Out - iot/alerte/gaz",
+        "topic": "iot/alerte/gaz",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "aae76bd67eb732e9",
+        "x": 1270,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "79744cb972711552",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "GAZ DANGER (>200)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1260,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "55c995934ced6260",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "GAZ WARNING (101-199)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 1280,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "1c0de777cea57278",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "GAZ OK (<=100)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 1250,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "01f93bf50d76d9ba",
+        "type": "mqtt in",
+        "z": "7e2d5442bc7c12cf",
+        "name": "",
+        "topic": "iot/alerte/gaz",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "aae76bd67eb732e9",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 330,
+        "y": 680,
+        "wires": [
+            [
+                "526a579b8c0a2edb"
+            ]
+        ]
+    },
+    {
+        "id": "526a579b8c0a2edb",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "GAZ DANGER (>=200)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 530,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "3f48e11f9ba3fb77",
+        "type": "switch",
+        "z": "7e2d5442bc7c12cf",
+        "name": "Switch Temperature",
+        "property": "payload.temperature",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "gt",
+                "v": "40",
+                "vt": "num"
+            },
+            {
+                "t": "btwn",
+                "v": "30",
+                "vt": "num",
+                "v2": "40",
+                "v2t": "num"
+            },
+            {
+                "t": "btwn",
+                "v": "29",
+                "vt": "num",
+                "v2": "18",
+                "v2t": "num"
+            },
+            {
+                "t": "lt",
+                "v": "17",
+                "vt": "num"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 4,
+        "x": 1010,
+        "y": 540,
+        "wires": [
+            [
+                "142a3cb567c36d10"
+            ],
+            [
+                "ca4d4ff0ebb2bd56"
+            ],
+            [
+                "82cb684e84b91706"
+            ],
+            [
+                "be59cad84314e4ee"
+            ]
+        ]
+    },
+    {
+        "id": "8017e38f85b783c6",
+        "type": "switch",
+        "z": "7e2d5442bc7c12cf",
+        "name": "Switch Humidité",
+        "property": "payload.humidite",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "gte",
+                "v": "70",
+                "vt": "str"
+            },
+            {
+                "t": "btwn",
+                "v": "40",
+                "vt": "num",
+                "v2": "69",
+                "v2t": "num"
+            },
+            {
+                "t": "btwn",
+                "v": "39",
+                "vt": "num",
+                "v2": "21",
+                "v2t": "num"
+            },
+            {
+                "t": "lte",
+                "v": "20",
+                "vt": "num"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 4,
+        "x": 1020,
+        "y": 720,
+        "wires": [
+            [
+                "4b8ac15ebda5de92"
+            ],
+            [
+                "187f0767dbaf3be3"
+            ],
+            [
+                "78dd2bd47ab8d875"
+            ],
+            [
+                "79322107886938ac"
+            ]
+        ]
+    },
+    {
+        "id": "ca4d4ff0ebb2bd56",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "TEMPERATURE RISQUE ACCRU (30->40)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1350,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "142a3cb567c36d10",
+        "type": "mqtt out",
+        "z": "7e2d5442bc7c12cf",
+        "name": "MQTT Out - iot/alerte/temperature",
+        "topic": "iot/alerte/temperature",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "aae76bd67eb732e9",
+        "x": 1320,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "82cb684e84b91706",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "TEMPERATURE NORMALE (18>30)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1330,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "187f0767dbaf3be3",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": " NORMAL (40-70%)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1250,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "79322107886938ac",
+        "type": "mqtt out",
+        "z": "7e2d5442bc7c12cf",
+        "name": "MQTT Out - iot/alerte/humidite",
+        "topic": "iot/alerte/humidite",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "aae76bd67eb732e9",
+        "x": 1290,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "4b8ac15ebda5de92",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "TRES HUMIDE (>70%)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1270,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "78dd2bd47ab8d875",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "RISQUE ELEVE  (20-40%)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1280,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "be59cad84314e4ee",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "TEMPERATURE BASSE(<17)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1310,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "a74617f7d9560fa1",
+        "type": "function",
+        "z": "7e2d5442bc7c12cf",
+        "name": "check data quality",
+        "func": "if (!msg.payload) return null;\n\n// Cast en nombres\nmsg.payload.temperature = Number(msg.payload.temperature);\nmsg.payload.humidite = Number(msg.payload.humidite);\nmsg.payload.gaz = Number(msg.payload.gaz);\n//msg.payload.latitude = Number(msg.payload.latitude);\n//msg.payload.longitude = Number(msg.payload.longitude);\n\n// Si une valeur est NaN on rejette\nif ([msg.payload.temperature, msg.payload.humidite, msg.payload.gaz, msg.payload.latitude, msg.payload.longitude]\n    .some(v => isNaN(v))) {\n\n    node.warn(\"Données invalides : NaN détecté\");\n    return null;\n}\n\nif (msg.payload.humidite < 0 || msg.payload.humidite > 100) {\n    node.warn(\"Humidité suspecte : \" + msg.payload.humidite);\n    return null;\n}\n\nif (msg.payload.gaz < 0 || msg.payload.gaz > 2000) {\n    node.warn(\"Valeur gaz suspecte : \" + msg.payload.gaz);\n    return null;\n}\n\n// Stocker la dernière position pour le script de mouvement\nglobal.set(\"last_position\", {\n    lat: msg.payload.latitude,\n    lon: msg.payload.longitude,\n    time: Date.now()\n});\n\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 560,
+        "wires": [
+            [
+                "d901cbdc34dd886c"
+            ]
+        ]
+    },
+    {
+        "id": "inject_test_click",
+        "type": "inject",
+        "z": "7e2d5442bc7c12cf",
+        "name": "Inject Test Données",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"temperature\":45,\"humidite\":95,\"gaz\":210,\"latitude\":45.5,\"longitude\":2.3,\"deviceId\":\"ESP8266_Zone_B\"}",
+        "payloadType": "json",
+        "x": 310,
+        "y": 440,
+        "wires": [
+            [
+                "a74617f7d9560fa1"
+            ]
+        ]
+    },
+    {
+        "id": "0b1e85357fae4a61",
+        "type": "inject",
+        "z": "7e2d5442bc7c12cf",
+        "name": "Inject Test Données",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"temperature\":85,\"humidite\":-75,\"gaz\":210,\"latitude\":45.5,\"longitude\":2.3,\"deviceId\":\"CapteurTest\"}",
+        "payloadType": "json",
+        "x": 290,
+        "y": 500,
+        "wires": [
+            [
+                "a74617f7d9560fa1"
+            ]
+        ]
+    },
+    {
+        "id": "87f3c326db25884c",
+        "type": "mqtt in",
+        "z": "7e2d5442bc7c12cf",
+        "name": "",
+        "topic": "iot/alerte/humidite",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "aae76bd67eb732e9",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 350,
+        "y": 760,
+        "wires": [
+            [
+                "120d2119704d85d6"
+            ]
+        ]
+    },
+    {
+        "id": "120d2119704d85d6",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "HUMIDITE DANGER EXTREME  (<20%)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "a29d9ba869fca3c6",
+        "type": "mqtt in",
+        "z": "7e2d5442bc7c12cf",
+        "name": "",
+        "topic": "iot/alerte/temperature",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "aae76bd67eb732e9",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 360,
+        "y": 840,
+        "wires": [
+            [
+                "315553f61b9d495f"
+            ]
+        ]
+    },
+    {
+        "id": "315553f61b9d495f",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "TEMPERATURE DANGER (>40)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "cfb1091fe8d0bac5",
+        "type": "mqtt in",
+        "z": "7e2d5442bc7c12cf",
+        "name": "",
+        "topic": "iot/mesures/cleandata",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "aae76bd67eb732e9",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 360,
+        "y": 920,
+        "wires": [
+            [
+                "306417f768b4da82"
+            ]
+        ]
+    },
+    {
+        "id": "306417f768b4da82",
+        "type": "debug",
+        "z": "7e2d5442bc7c12cf",
+        "name": "Clean Data",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 550,
+        "y": 920,
+        "wires": []
+    }
+]

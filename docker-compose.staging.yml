@@ -1,0 +1,104 @@
+services:
+  nodered:
+    image: $DOCKER_HUB_USER/testsae-nodered:latest
+    container_name: nodered
+    ports:
+      - "1880:1880"
+    environment:
+      - TZ=Europe/Paris
+    depends_on:
+      - mysql
+      - mosquitto
+    volumes:
+      - ./nodered-data:/data  
+    networks:
+      - iotnet
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: nodered
+      MYSQL_USER: nodered
+      MYSQL_PASSWORD: noderedpassword
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d  
+    networks:
+      - iotnet
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: always
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto-config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - ./mosquitto-logs:/mosquitto/log
+    networks:
+      - iotnet
+
+  backend:
+    image: $DOCKER_HUB_USER/testsae-backend:latest
+    container_name: backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_USER=nodered
+      - DB_PASSWORD=noderedpassword
+      - DB_NAME=nodered
+      - MQTT_BROKER=mosquitto
+    depends_on:
+      - mysql
+      - mosquitto
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - iotnet
+
+  frontend:
+    image: $DOCKER_HUB_USER/testsae-frontend:latest
+    container_name: frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - iotnet
+  
+  monitor:
+    image: nicolargo/glances:latest-full
+    container_name: monitor
+    restart: always
+    pid: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - GLANCES_OPT=-w
+    ports:
+      - "61208:61208"
+    networks:
+      - iotnet
+
+networks:
+  iotnet:
+
+networks:
+  iotnet:
+
+volumes:
+  nodered_data:
+  mysql_data:
+  mosquitto_data:

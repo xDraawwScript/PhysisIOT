@@ -1,0 +1,127 @@
+{
+  "zones": {
+    "Valbonne": [
+      {
+        "date": "2025-11-25",
+        "temperature": 11.68,
+        "relativehumidity": 54.17,
+        "windspeed": 3.47,
+        "precipitation_probability": 3.17,
+        "snapshot": {
+          "temperature": 10.97,
+          "humidity": 89,
+          "windSpeed": 2.59,
+          "precipProb": 6
+        }
+      },
+      {
+        "date": "2025-11-26",
+        "temperature": 11.18,
+        "relativehumidity": 35.79,
+        "windspeed": 2.65,
+        "precipitation_probability": 0,
+        "snapshot": {
+          "temperature": 9.8,
+          "humidity": 32,
+          "windSpeed": 3.19,
+          "precipProb": 0
+        }
+      },
+      {
+        "date": "2025-12-18",
+        "temperature": 12.76,
+        "relativehumidity": 77.75,
+        "windspeed": 2.25,
+        "precipitation_probability": 0,
+        "snapshot": {
+          "temperature": 11.68,
+          "humidity": 83,
+          "windSpeed": 1.85,
+          "precipProb": 0
+        }
+      }
+    ],
+    "Biot": [
+      {
+        "date": "2025-11-25",
+        "temperature": 11.73,
+        "relativehumidity": 55.21,
+        "windspeed": 3.47,
+        "precipitation_probability": 3.17,
+        "snapshot": {
+          "temperature": 9.93,
+          "humidity": 96,
+          "windSpeed": 2.59,
+          "precipProb": 6
+        }
+      },
+      {
+        "date": "2025-11-26",
+        "temperature": 7.98,
+        "relativehumidity": 48.92,
+        "windspeed": 2.65,
+        "precipitation_probability": 0.42,
+        "snapshot": {
+          "temperature": 3.92,
+          "humidity": 61,
+          "windSpeed": 3.19,
+          "precipProb": 0
+        }
+      },
+      {
+        "date": "2025-12-18",
+        "temperature": 11.72,
+        "relativehumidity": 83.5,
+        "windspeed": 2.25,
+        "precipitation_probability": 0,
+        "snapshot": {
+          "temperature": 10.97,
+          "humidity": 87,
+          "windSpeed": 1.85,
+          "precipProb": 0
+        }
+      }
+    ],
+    "Sophia Antipolis": [
+      {
+        "date": "2025-11-25",
+        "temperature": 11.68,
+        "relativehumidity": 54.17,
+        "windspeed": 3.47,
+        "precipitation_probability": 3.17,
+        "snapshot": {
+          "temperature": 10.97,
+          "humidity": 89,
+          "windSpeed": 2.59,
+          "precipProb": 6
+        }
+      },
+      {
+        "date": "2025-11-26",
+        "temperature": 11.18,
+        "relativehumidity": 35.79,
+        "windspeed": 2.65,
+        "precipitation_probability": 0,
+        "snapshot": {
+          "temperature": 9.8,
+          "humidity": 32,
+          "windSpeed": 3.19,
+          "precipProb": 0
+        }
+      },
+      {
+        "date": "2025-12-18",
+        "temperature": 12.76,
+        "relativehumidity": 77.75,
+        "windspeed": 2.25,
+        "precipitation_probability": 0,
+        "snapshot": {
+          "temperature": 11.68,
+          "humidity": 83,
+          "windSpeed": 1.85,
+          "precipProb": 0
+        }
+      }
+    ]
+  }
+}
