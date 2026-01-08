@@ -35,6 +35,8 @@ build:frontend:
       - develop
       - feature/sonarqube
       - hotfix/sonarqube
+      - feature/testSupplementaire
+      - hotfix/trivy
 
 # --- BUILD BACKEND ---
 build:backend:
@@ -61,6 +63,8 @@ build:backend:
       - develop
       - feature/sonarqube
       - hotfix/sonarqube
+      - feature/testSupplementaire
+      - hotfix/trivy
 
 # --- BUILD NODERED ---
 build:nodered:
@@ -87,6 +91,7 @@ build:nodered:
       - develop
       - feature/sonarqube
       - hotfix/sonarqube
+      - hotfix/trivy
 
 # --- TESTS UNITAIRES ---
 test:frontend:unit:
@@ -141,6 +146,36 @@ test:backend:unit:
       - feature/sonarqube
       - hotfix/sonarqube
 
+test:integration:
+  stage: test
+  image: docker:25-cli
+  tags:
+    - dind
+  services:
+    - docker:dind
+  before_script:
+    - *docker_login
+  script:
+    - docker rm -f backend frontend mysql mosquitto || true
+    - docker network rm test-net || true
+    - docker network create test-net
+    - docker run -d --name mysql --network test-net -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=sae_iot mysql:8.0
+    - docker run -d --name mosquitto --network test-net eclipse-mosquitto:2
+    - docker run -d --name backend --network test-net -e DB_HOST=mysql -e MQTT_HOST=mosquitto $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:$CI_COMMIT_SHORT_SHA
+    - docker run -d --name frontend --network test-net $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:$CI_COMMIT_SHORT_SHA
+    - sleep 30
+    - docker ps
+    - docker exec backend nc -z localhost 3000 || exit 1
+    - docker exec frontend wget -q -O /dev/null http://localhost:80 || exit 1
+  after_script:
+    - docker rm -f backend frontend mysql mosquitto || true
+    - docker network rm test-net || true
+  only:
+    refs:
+      - main
+      - develop
+      - feature/testSupplementaire
+
 # --- SÉCURITÉ ---
 security:npm-audit:
   stage: security
@@ -165,17 +200,23 @@ security:trivy:
     - docker:dind
   before_script:
     - apk add --no-cache curl bash
-    - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    - curl -sfL --retry 5 --retry-delay 5 https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
     - *docker_login
-    - docker pull $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:$CI_COMMIT_SHORT_SHA
-    - docker pull $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:$CI_COMMIT_SHORT_SHA
-    - docker pull $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:$CI_COMMIT_SHORT_SHA
   script:
+    - docker pull $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:$CI_COMMIT_SHORT_SHA
     - trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:$CI_COMMIT_SHORT_SHA
+    - docker rmi $DOCKER_HUB_USER/sae-s5-but3-iot-g1-frontend:$CI_COMMIT_SHORT_SHA
+    
+    - docker pull $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:$CI_COMMIT_SHORT_SHA
     - trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:$CI_COMMIT_SHORT_SHA
+    - docker rmi $DOCKER_HUB_USER/sae-s5-but3-iot-g1-backend:$CI_COMMIT_SHORT_SHA
+
+    - docker pull $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:$CI_COMMIT_SHORT_SHA
     - trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:$CI_COMMIT_SHORT_SHA
+    - docker rmi $DOCKER_HUB_USER/sae-s5-but3-iot-g1-nodered:$CI_COMMIT_SHORT_SHA
   only:
     refs:
       - main
       - develop
       - hotfix/sonarqube
+      - hotfix/trivy

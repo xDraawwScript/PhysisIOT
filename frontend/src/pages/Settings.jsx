@@ -120,7 +120,7 @@ export default function Settings({ onClose, onLogout }) {
 
   return (
     <div style={containerStyle}>
-      <h2 style={{ marginBottom: 10, fontWeight: "normal" }}>{t('settingsPage.title')}</h2>
+      <h2 style={{ marginBottom: 10, fontWeight: "normal" }}>Paramètres</h2>
       <p style={{ marginBottom: 20, color: "#555" }}>
         Gérez les paramètres de votre application.
       </p>

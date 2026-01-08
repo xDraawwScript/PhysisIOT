@@ -60,12 +60,18 @@ Accessible une fois `docker compose up` lancé sur votre machine.
 ├── .gitlab-ci.yml              # Pipeline CI/CD
 └── sonar-project.properties    # Configuration SonarQube (non utilisé)
 ```
+## Architecture Logicielle
+![Architecture du projet logicielle](assets/archi_logicielle.png) 
+## Architecture Matérielle 
+![Architecture du projet matérielle](assets/archi_mat.png)
 ## Installation & Démarrage (Local)
 
 ### 1.Prérequis
 * **Docker** et **Docker Compose** installés.
 * **Node.js** (uniquement pour lancer les scripts de tests/scan).
 * **Git**.
+* **Docker Desktop** et il faut l'avoir démarré.
+
 
 ### 2.Configuration Initiale (Indispensable)
 Pour que le frontend puisse communiquer avec le backend, vous devez créer un fichier d'environnement.
@@ -76,10 +82,10 @@ Pour que le frontend puisse communiquer avec le backend, vous devez créer un fi
 
 ```properties
 # Option A : Utiliser les données du serveur Azure sans lancer le backend local
-VITE_API_URL=[http://20.250.161.72:3000](http://20.250.161.72:3000)
+VITE_API_URL=http://20.250.161.72:3000
 
 # Option B : Travailler 100% en local (Nécessite le backend Docker lancé)
-# VITE_API_URL=http://localhost:3000
+VITE_API_URL=http://localhost:3000
 ```
 
 ### 3. Préparation pour Windows (WSL2)
@@ -129,7 +135,7 @@ npm test
 ## Architecture & Déploiement (CI/CD)
 
 ### Gestion Dynamique de l'API
-On code pas d'IP en dur) :
+On code pas d'IP en dur :
 * **En Local :** Il utilise le fichier `.env`.
 * **En Prod :** L'IP Azure est injectée automatiquement dans l'image Docker par GitLab CI au moment du build.
 
