@@ -2,6 +2,8 @@
 
 Ce projet est une solution complète (Fullstack + IoT) permettant la surveillance de zones à risques (incendies, inondations, etc.) via des capteurs simulés et des données météorologiques en temps réel.
 
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 ---
 
 ## Accès Rapides (Liens Utiles)
